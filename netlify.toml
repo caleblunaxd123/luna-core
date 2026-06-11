@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# El frontend llama a /api/chat → la función serverless (la API key queda en el servidor)
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
