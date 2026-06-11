@@ -1,0 +1,9 @@
+{
+  "name": "luna-core-demo",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Luna Core — demo interactiva del Agente de Ventas (Netlify Functions + Groq)",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

@@ -40,6 +40,23 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return json(200, {});
   if (event.httpMethod !== 'POST') return json(405, { error: 'Método no permitido' });
 
+  // ── Anti-abuso: tope de mensajes por IP al día (vía Netlify Blobs) ──
+  // fail-open: si Blobs no está disponible, NO se bloquea (la demo nunca se rompe).
+  const DAILY_CAP = 30;
+  const ip = event.headers['x-nf-client-connection-ip']
+          || (event.headers['x-forwarded-for'] || '').split(',')[0].trim()
+          || 'anon';
+  try {
+    const { getStore } = await import('@netlify/blobs');
+    const store = getStore('ratelimit');
+    const day = new Date().toISOString().slice(0, 10);
+    const rkey = `${ip}:${day}`;
+    const count = parseInt((await store.get(rkey)) || '0', 10);
+    if (count >= DAILY_CAP)
+      return json(429, { error: 'ratelimit', message: 'Alcanzaste el límite de prueba de hoy 🌙 Escríbenos para seguir.' });
+    await store.set(rkey, String(count + 1));
+  } catch (_) { /* fail-open */ }
+
   const KEY = process.env.GROQ_API_KEY;
   if (!KEY) return json(500, { error: 'config', message: 'Falta GROQ_API_KEY en las variables de entorno de Netlify.' });
 
